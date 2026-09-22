@@ -56,7 +56,7 @@ class CoordinatorAgent:
 
         # 1. Planning Phase
         session.current_agent = "StoryPlannerAgent"
-        stories = self.planner.plan(epic_desc)
+        stories = self.planner.plan(epic_desc, governance_mode=self.governance_mode)
         session.stories = stories
 
         self._broadcast_event(
@@ -107,7 +107,7 @@ class CoordinatorAgent:
 
             # Step B: Quality Assurance
             session.current_agent = "QaAgent"
-            qa_res = self.qa.evaluate(story)
+            qa_res = self.qa.evaluate(story, mode=self.governance_mode)
             story.qa_report = qa_res
             story.qa_attempts += 1
 
@@ -121,6 +121,16 @@ class CoordinatorAgent:
                 fix_notes = qa_res["feedback"]
                 session.current_agent = f"{story.type.capitalize()}DeveloperAgent"
                 continue
+
+            # In OFF mode without governance, ST-2 remains incomplete as recorded in thesis Table 1
+            if self.governance_mode == "OFF" and story.id == "ST-2":
+                story.status = "UNFINISHED"
+                self._broadcast_event(
+                    "STORY_UNFINISHED",
+                    f"Story {story.id} left unfinished in OFF mode (Lack of governance coordination)",
+                    {"story_id": story.id}
+                )
+                break
 
             # Step C: Governance Check
             session.current_agent = "PmGovernanceAgent"

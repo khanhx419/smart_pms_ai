@@ -10,15 +10,17 @@ class QaAgent:
     and triggers Self-Correction Loops upon failure.
     """
 
-    def evaluate(self, story: Story) -> Dict[str, Any]:
+    def evaluate(self, story: Story, mode: str = "STRICT") -> Dict[str, Any]:
         logger = MetricsLogger()
-        logger.log_event("QA_START", f"QA Agent evaluating {story.id}: '{story.title}' (Attempt #{story.qa_attempts + 1})")
+        logger.log_event("QA_START", f"QA Agent evaluating {story.id}: '{story.title}' (Attempt #{story.qa_attempts + 1}, Mode: {mode})")
 
         result = TestRunner.evaluate(
             code=story.code or "",
             tests=story.tests or "",
             story_type=story.type,
-            attempt=story.qa_attempts + 1
+            attempt=story.qa_attempts + 1,
+            story_id=story.id,
+            mode=mode
         )
 
         if result["passed"]:
