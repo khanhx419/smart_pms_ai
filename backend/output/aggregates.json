@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "stories_completed": 2,
+    "total_duration_seconds": 0.1,
+    "agentic_velocity_features_per_hour": 71314.35,
+    "self_correction_ratio": 0.3333,
+    "governance_overhead_seconds": 0.1,
+    "governance_overhead_minutes": 0.0,
+    "qa_pass_rate_percent": 66.67,
+    "first_pass_quality_percent": 50.0,
+    "governance_pass_rate_percent": 100.0,
+    "qa_failures": 1,
+    "qa_passes": 2,
+    "total_tokens": 0
+  },
+  "total_events": 9,
+  "last_updated": "2026-09-22 08:57:57"
+}

@@ -1,58 +1,35 @@
 const API_BASE = '/api';
 
-async function request(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
-  const config = {
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  const response = await fetch(url, config);
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const error = new Error(data.message || `HTTP error ${response.status}`);
-    error.status = response.status;
-    error.details = data.details;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
-}
-
 export const api = {
-  // Projects
-  getProjects: () => request('/projects'),
-  getProject: (id) => request(`/projects/${id}`),
-  createProject: (data) => request('/projects', { method: 'POST', body: JSON.stringify(data) }),
-  updateProject: (id, data) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
+  getHealth: async () => {
+    const res = await fetch(`${API_BASE}/health`);
+    return res.json();
+  },
 
-  // Users
-  getUsers: () => request('/users'),
-  createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  getLatest: async () => {
+    const res = await fetch(`${API_BASE}/workflow/latest`);
+    return res.json();
+  },
 
-  // Tasks
-  getTasks: (projectId) => request(`/projects/${projectId}/tasks`),
-  createTask: (projectId, data) => request(`/projects/${projectId}/tasks`, { method: 'POST', body: JSON.stringify(data) }),
-  updateTask: (id, data) => request(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  updateTaskStatus: (id, status, version) =>
-    request(`/tasks/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status, version }),
-    }),
-  deleteTask: (id) => request(`/tasks/${id}`, { method: 'DELETE' }),
+  getBenchmarks: async () => {
+    const res = await fetch(`${API_BASE}/benchmark`);
+    return res.json();
+  },
 
-  // Schedule & AI
-  recalculateSchedule: (projectId) =>
-    request(`/projects/${projectId}/schedule/recalculate`, { method: 'POST' }),
-  decomposeAi: (projectId, data) =>
-    request(`/projects/${projectId}/ai/decompose`, {
+  runWorkflow: async (epic, governance_mode) => {
+    const res = await fetch(`${API_BASE}/workflow/run`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epic, governance_mode }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  createEventSource: () => {
+    return new EventSource(`${API_BASE}/workflow/stream`);
+  }
 };

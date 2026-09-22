@@ -1,78 +1,81 @@
-# Smart Project Management System (Smart PMS)
+# Agentic SDLC Governance Laboratory
 
-Hệ thống quản lý dự án thông minh với khả năng tiếp nhận tài liệu đặc tả nghiệp vụ (Use Case), dùng AI bóc tách Work Breakdown Structure (WBS), giải quyết bài toán **ánh xạ ID tạm thời sang ID thực tế**, quy đổi thời gian sang **Lịch làm việc thực tế (Working Calendar)**, phân bổ **nhân sự (Resource Allocation)**, tính toán đường găng **PERT / CPM** trên đồ thị DAG, và quản lý trạng thái an toàn với **Database Locking & Versioning**.
+A Project Management Framework for Control and Quality Assurance in Autonomous Multi-Agent Software Development Life Cycles.
 
----
-
-## 🌟 Các Tính năng Cốt lõi
-
-1. **Thuật toán Ánh xạ ID 2 Pha (Two-Phase ID Resolution Mapping)**:
-   - Tiếp nhận WBS dạng DAG với các ID tạm thời (`T1`, `T2`, ...) từ AI.
-   - **Pha 1**: Chèn các công việc vào MySQL và lưu lại Auto-increment ID thực tế trong từ điển bộ nhớ.
-   - **Pha 2**: Duyệt mảng `depends_on`, tra cứu ID thực tế và chèn quan hệ khóa ngoại vào bảng `task_dependencies`.
-   - Bảo toàn 100% tính toàn vẹn dữ liệu trong một **Database Transaction** (`START TRANSACTION ... COMMIT / ROLLBACK`).
-
-2. **Lịch làm việc thực tế (Working Calendar Scheduling)**:
-   - Quy định giờ làm việc tiêu chuẩn: 08:00 - 12:00 (4h) và 13:00 - 17:00 (4h) -> 8 giờ/ngày.
-   - Tự động bỏ qua 1 giờ nghỉ trưa (12:00 - 13:00).
-   - Tự động nhảy qua Thứ 7 và Chủ Nhật đến 08:00 sáng Thứ Hai tuần kế tiếp.
-   - Triệt tiêu tình trạng nhân viên bị phân bổ làm việc vào đêm khuya hoặc ngày nghỉ cuối tuần.
-
-3. **Thuật toán PERT / CPM (Critical Path Method)**:
-   - **Kahn's Topological Sort**: Phát hiện chu trình (Cycle Detection) trên đồ thị có hướng.
-   - **Forward Pass**: Tính toán Early Start ($ES$) và Early Finish ($EF$).
-   - **Backward Pass**: Tính toán Late Start ($LS$) và Late Finish ($LF$).
-   - **Slack & Đường găng (Critical Path)**: Tính $\text{Slack} = LS - ES$. Đánh dấu công việc găng ($\text{Slack} = 0$, `is_critical = true`).
-
-4. **Phân bổ tài nguyên (Resource Allocation)**:
-   - Phân tích vai trò gợi ý từ AI (`suggested_role`) và tự động gán cho nhân sự phù hợp (`users`).
-   - Hiển thị thông tin người phụ trách trực tiếp trên biểu đồ Gantt và bảng WBS.
-
-5. **Kiểm soát Xung đột Đồng thời (Concurrency Control)**:
-   - Stored Procedure `sp_update_task_status` kết hợp **Pessimistic Row Locking (`FOR UPDATE`)** và **Optimistic Versioning (`version`)**.
-   - Ngăn ngừa triệt để Race Condition khi nhiều quản trị viên hoặc thành viên cập nhật cùng lúc, phản hồi mã HTTP 409 Conflict.
+> **Academic Foundation**: Based on the Master of Engineering in Project Management Thesis:  
+> *"Governing Agentic AI in the Software Development Life Cycle: A Project Management Framework for Control and Quality Assurance"*  
+> **Author**: Muhammad Awais (Vaasan Ammattikorkeakoulu - VAMK University of Applied Sciences, 2026).
 
 ---
 
-## 🛠️ Ngăn xếp Công nghệ (Tech Stack)
+## 🌟 Core Architecture: Hub-and-Spoke Coordination
 
-- **Backend**: PHP 8.2+, PSR-4 Autoloading, PDO Prepared Statements, RESTful Controllers, DAO Pattern.
-- **Cơ sở dữ liệu**: MySQL / MariaDB 10.4+, InnoDB Engine, Foreign Keys, Stored Procedures, Transactions.
-- **Frontend**: React 18, Vite 5, Tailwind CSS, Lucide Icons.
-- **AI Integration**: Google Gemini API / OpenAI API / Domain Heuristic Engine.
+The system implements a centralized **Hub-and-Spoke** multi-agent model (Section 5.1):
+
+1. **Central Coordinator Agent (Hub)**: Serves as the PM controller, managing session states, dispatching tasks to specialized worker agents, and enforcing that no story progresses to governance without clearing QA.
+2. **StoryPlanner Agent (Spoke)**: Decomposes Epics into granular user stories, assigns **Fibonacci story points** ($1, 2, 3, 5, 8$), and classifies them as `FRONTEND` or `BACKEND`.
+3. **Developer Agents (FE/BE Spokes)**: Implement UI components and API endpoints under a strict **No-Merge Constraint**.
+4. **QA Agent (Spoke)**: Runs automated test suites, validates test coverage ($\ge 80\%$), and triggers the recursive **Self-Correction Loop (SCR)** upon test failure.
+5. **PM Governance Agent (Spoke)**: Serves as the final release authority, enforcing behavioral guardrails and SAST security scanning (Bandit equivalent).
 
 ---
 
-## 🚀 Hướng dẫn Cài đặt & Vận hành
+## 🛡️ Three Governance Modes (Section 3.5 & Chapter 4)
 
-### 1. Cơ sở dữ liệu
-Khởi động MySQL server và nhập file schema:
+- **OFF Mode (Control)**: Maximum autonomy, no automated validation. Highest raw velocity but lowest QA stability and undetected security defects.
+- **BASIC Mode**: Enforces presence of unit tests and basic functionality. Delivers the highest balanced **Agentic Velocity ($46.91\text{ feat/hr}$)**.
+- **STRICT Mode (Scientific Guardrails)**: Full security scanning (Bandit equivalent) for hardcoded secrets, SQL injection, and architectural compliance. Yields **$100\%$ Governance Pass Rate** with zero escaped defects.
+
+---
+
+## 📐 Scientific KPIs & Mathematical Formulations (Section 3.6)
+
+1. **Agentic Velocity (AV)**:
+   $$\text{AV (Features/Hour)} = \frac{\text{Completed Stories}}{\text{Total Duration (seconds)} / 3600}$$
+2. **Self-Correction Ratio (SCR)**:
+   $$\text{SCR} = \frac{\text{QA Rejections}}{\text{Total Submissions (Pass + Fail)}}$$
+3. **Governance Overhead (GO)**:
+   $$\text{GO} = \sum (\text{GOV\_Approval Timestamp} - \text{QA\_PASS Timestamp})$$
+
+---
+
+## 🚀 Getting Started
+
+### 1. Backend Service (FastAPI & Agent Engine)
 ```bash
-mysql --default-character-set=utf8mb4 -u root < backend/database/schema.sql
+# Install Python dependencies
+pip install -r backend/requirements.txt
+
+# Run CLI Single Epic Execution (Conforming to Snippet 1.1)
+python backend/main.py --mode single --epic "Create a user login page with email validation" --governance STRICT
+
+# Run Automated Sprints (Replicating Table 4 Comparison)
+python backend/main.py --mode automated_sprints
+
+# Run FastAPI Server
+python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
-### 2. Backend API
+### 2. Run Verification Test Suite
 ```bash
-cd backend
-composer dump-autoload
-php -S 127.0.0.1:8000 -t public
-```
-Endpoint kiểm tra sức khỏe: `http://127.0.0.1:8000/api/health`
-
-Chạy bộ kiểm thử tự động 13 test cases:
-```bash
-php backend/tests/VerificationTest.php
+python backend/tests/test_governance_suite.py
 ```
 
-### 3. Frontend React SPA
+### 3. Frontend React Dashboard & Visualizer
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Truy cập giao diện: `http://localhost:5173/`
+Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
 
 ---
 
-## 📄 Bản quyền
-Smart Project Management System © 2026.
+## 📊 Enterprise Benchmarks Included
+
+Contains benchmark data comparing the Agentic Laboratory against engineering teams at:
+- **TechwareSoft UAE** (Hatim Baloch PM, Umar Hayat Dev, Muhammad Mujtaba Khan QA)
+- **Wärtsilä Finland** (Aaro Ahola)
+- **10Pearls Pakistan** (Abdul Raziq Advani)
+- **Abu Dhabi Ports Group UAE** (Haider Ali Zaidi)
+- **Hollywood Technologies Bahrain** (Muhammad Usman)
