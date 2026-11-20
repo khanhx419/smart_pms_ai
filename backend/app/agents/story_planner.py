@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.core.session_state import Story
 from app.core.metrics_logger import MetricsLogger
 
@@ -10,18 +10,27 @@ class StoryPlannerAgent:
     Corresponds to StoryPlanner Agent in Section 5.4.2 & Snippet 1.2, 1.3.
     Decomposes an Epic into a structured JSON list of user stories,
     assigns Fibonacci story points, and classifies as FRONTEND or BACKEND.
+    Supports injecting custom user stories directly from JSON input.
     """
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
 
-    def plan(self, epic_desc: str, governance_mode: str = "STRICT") -> List[Story]:
+    def plan(
+        self,
+        epic_desc: str,
+        governance_mode: str = "STRICT",
+        custom_stories: Optional[List[Dict[str, Any]]] = None
+    ) -> List[Story]:
         logger = MetricsLogger()
         logger.log_event("PLANNER_START", f"StoryPlanner analyzing Epic: '{epic_desc}' (Governance: {governance_mode})")
 
         stories_data = []
 
-        if os.getenv("GEMINI_API_KEY"):
+        if custom_stories and len(custom_stories) > 0:
+            stories_data = custom_stories
+            logger.log_event("PLANNER_CUSTOM", f"Using {len(custom_stories)} custom user stories from input.")
+        elif os.getenv("GEMINI_API_KEY"):
             try:
                 stories_data = self._call_gemini(epic_desc)
             except Exception as e:
@@ -187,44 +196,5 @@ Return strictly valid JSON with no markdown formatting.
                 "description": "Store token in secure storage and handle navigation upon successful authorization.",
                 "type": "FRONTEND",
                 "story_points": 2
-            }
-        ]
-
-        # Generic decomposition for other Epics
-        return [
-            {
-                "id": "ST-1",
-                "title": f"Backend Core API Implementation for {epic[:30]}",
-                "description": f"Implement REST endpoints and business validation logic for {epic}.",
-                "type": "BACKEND",
-                "story_points": 5
-            },
-            {
-                "id": "ST-2",
-                "title": f"Frontend User Interface & Interaction for {epic[:30]}",
-                "description": f"Implement client UI views and user interaction controls for {epic}.",
-                "type": "FRONTEND",
-                "story_points": 3
-            },
-            {
-                "id": "ST-3",
-                "title": "Backend Data Model & Schema Persistence",
-                "description": "Database schema definitions, foreign keys, and CRUD operations.",
-                "type": "BACKEND",
-                "story_points": 5
-            },
-            {
-                "id": "ST-4",
-                "title": "Frontend Form Validation & Error State Handlers",
-                "description": "Client-side validation, error banners, and loading spinners.",
-                "type": "FRONTEND",
-                "story_points": 2
-            },
-            {
-                "id": "ST-5",
-                "title": "Integration Middleware & Security Guardrails",
-                "description": "CORS headers, authorization checks, and audit logging.",
-                "type": "BACKEND",
-                "story_points": 3
             }
         ]

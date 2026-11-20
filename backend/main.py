@@ -9,26 +9,29 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from app.core.coordinator import CoordinatorAgent
 
 def print_banner():
-    print("=" * 70)
-    print(" AGENTIC SDLC GOVERNANCE LABORATORY - CLI RUNNER")
-    print(" Master of Engineering in Project Management Research (2026)")
-    print("=" * 70)
+    print("=" * 75)
+    print(" AGENTIC SDLC GOVERNANCE LABORATORY - CLI & REPORT RUNNER")
+    print(" Master of Engineering in Project Management Research (Muhammad Awais, 2026)")
+    print("=" * 75)
 
-def run_single(epic: str, governance: str):
-    print(f"\n[*] Executing Single Epic in '{governance}' Mode...")
+def run_single(epic: str, governance: str, custom_stories: list = None):
+    print(f"\n[*] Executing Single SDLC Workflow in '{governance}' Mode...")
     print(f"[*] Epic: '{epic}'")
+    if custom_stories:
+        print(f"[*] Injected Custom Stories: {len(custom_stories)} stories from file")
+        
     coordinator = CoordinatorAgent(governance_mode=governance)
     
     def on_event(ev):
-        print(f"  [{ev['datetime']}] [{ev['type']:<22}] {ev['message']}")
+        print(f"  [{ev['datetime']}] [{ev['type']:<24}] {ev['message']}")
 
     coordinator.register_event_listener(on_event)
-    result = coordinator.run_sdlc_workflow(epic)
+    result = coordinator.run_sdlc_workflow(epic, custom_stories=custom_stories)
     metrics = result["metrics"]
 
-    print("\n" + "-" * 70)
+    print("\n" + "-" * 75)
     print(f" SPRINT RESULTS ({governance} MODE)")
-    print("-" * 70)
+    print("-" * 75)
     print(f"  • Stories Completed           : {metrics['stories_completed']}")
     print(f"  • Agentic Velocity (AV)       : {metrics['agentic_velocity_features_per_hour']} features/hour")
     print(f"  • Self-Correction Ratio (SCR) : {metrics['self_correction_ratio']}")
@@ -36,16 +39,18 @@ def run_single(epic: str, governance: str):
     print(f"  • QA Pass Rate                : {metrics['qa_pass_rate_percent']}%")
     print(f"  • Governance Pass Rate        : {metrics['governance_pass_rate_percent']}%")
     print(f"  • Output Directory            : {result['output_directory']}")
-    print("=" * 70 + "\n")
+    if "report_path" in result:
+        print(f"  • Báo cáo Markdown xuất xưởng : {result['report_path']}")
+    print("=" * 75 + "\n")
 
-def run_automated_sprints(epic: str):
+def run_automated_sprints(epic: str, custom_stories: list = None):
     print("\n[*] Running 'Automated Sprints' across all 3 Governance Modes (OFF, BASIC, STRICT)...")
     modes = ["OFF", "BASIC", "STRICT"]
     summaries = []
 
     for m in modes:
         coordinator = CoordinatorAgent(governance_mode=m)
-        res = coordinator.run_sdlc_workflow(epic)
+        res = coordinator.run_sdlc_workflow(epic, custom_stories=custom_stories)
         summaries.append((m, res["metrics"]))
 
     print("\n" + "=" * 80)
@@ -77,15 +82,30 @@ def main():
     parser = argparse.ArgumentParser(description="Agentic SDLC Governance Laboratory CLI")
     parser.add_argument("--mode", choices=["single", "automated_sprints"], default="single", help="Execution mode")
     parser.add_argument("--epic", type=str, default="Create a user login page with email validation", help="Natural language Epic")
+    parser.add_argument("--epic-file", type=str, default=None, help="Path to text file containing Epic description")
+    parser.add_argument("--stories-file", type=str, default=None, help="Path to JSON file containing custom User Stories")
     parser.add_argument("--governance", choices=["OFF", "BASIC", "STRICT"], default="STRICT", help="Governance strictness level")
 
     args = parser.parse_args()
     print_banner()
 
+    epic_text = args.epic
+    if args.epic_file and os.path.isfile(args.epic_file):
+        with open(args.epic_file, "r", encoding="utf-8") as f:
+            epic_text = f.read().strip()
+        print(f"[*] Loaded Epic from file: {args.epic_file}")
+
+    custom_stories = None
+    if args.stories_file and os.path.isfile(args.stories_file):
+        with open(args.stories_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            custom_stories = data if isinstance(data, list) else data.get("stories", [])
+        print(f"[*] Loaded {len(custom_stories)} User Stories from file: {args.stories_file}")
+
     if args.mode == "single":
-        run_single(args.epic, args.governance)
+        run_single(epic_text, args.governance, custom_stories)
     else:
-        run_automated_sprints(args.epic)
+        run_automated_sprints(epic_text, custom_stories)
 
 if __name__ == "__main__":
     main()

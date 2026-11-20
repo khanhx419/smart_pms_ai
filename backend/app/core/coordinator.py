@@ -36,7 +36,7 @@ class CoordinatorAgent:
             except Exception:
                 pass
 
-    def run_sdlc_workflow(self, epic_desc: str) -> Dict[str, Any]:
+    def run_sdlc_workflow(self, epic_desc: str, custom_stories: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         """
         Executes the entire automated SDLC lifecycle conforming to
         Snippet 1.0: Run_SDLC_Workflow(epic_desc, governance_mode).
@@ -56,7 +56,7 @@ class CoordinatorAgent:
 
         # 1. Planning Phase
         session.current_agent = "StoryPlannerAgent"
-        stories = self.planner.plan(epic_desc, governance_mode=self.governance_mode)
+        stories = self.planner.plan(epic_desc, governance_mode=self.governance_mode, custom_stories=custom_stories)
         session.stories = stories
 
         self._broadcast_event(
@@ -76,10 +76,20 @@ class CoordinatorAgent:
         self.logger.end_sprint()
 
         metrics = self.logger.calculate_metrics()
+
+        # Generate Deliverables Markdown Report
+        report_path = FileWriterTool.generate_markdown_report(
+            epic_desc=epic_desc,
+            governance_mode=self.governance_mode,
+            metrics=metrics,
+            stories=session.stories,
+            events=self.logger.events
+        )
+
         self._broadcast_event(
             "SPRINT_COMPLETE",
             f"SDLC Workflow successfully finished. AV: {metrics['agentic_velocity_features_per_hour']} feat/hr, SCR: {metrics['self_correction_ratio']}, GO: {metrics['governance_overhead_seconds']}s",
-            {"metrics": metrics}
+            {"metrics": metrics, "report": report_path}
         )
 
         return {
@@ -88,7 +98,8 @@ class CoordinatorAgent:
             "metrics": metrics,
             "stories": [s.model_dump() for s in session.stories],
             "events": self.logger.events,
-            "output_directory": self.logger.output_dir
+            "output_directory": self.logger.output_dir,
+            "report_path": report_path
         }
 
     def _process_single_story(self, story: Story, session: SessionState):

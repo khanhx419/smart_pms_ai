@@ -17,7 +17,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
     e.preventDefault();
     setError('');
 
-    // Validation temporarily omitted
+    if (!validateEmail(email)) { setError('Invalid email format'); return; }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
