@@ -3,6 +3,12 @@ import json
 import sys
 import os
 
+# Ép UTF-8 cho stdout/stderr trên Windows để không lỗi khi đường dẫn/văn bản có tiếng Việt
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Ensure app package is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
