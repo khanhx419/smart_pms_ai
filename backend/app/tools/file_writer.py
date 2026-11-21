@@ -95,6 +95,22 @@ class FileWriterTool:
             gov_rep = s_dict.get("gov_report") or {}
             lines.append(f"- **Kết quả QA:** `{qa_rep.get('status', 'PASSED')}` (Độ bao phủ: {qa_rep.get('coverage', 85)}%)")
             lines.append(f"- **Kết quả PM Governance:** `{gov_rep.get('status', 'APPROVED')}` (Bảo mật: PASS)")
+
+            lang = "tsx" if ext == "tsx" else "python"
+            code_txt = (s_dict.get("code") or "").strip()
+            test_txt = (s_dict.get("tests") or "").strip()
+            if code_txt:
+                lines.append("")
+                lines.append(f"#### Mã nguồn triển khai (`{s_id}_impl.{ext}`)")
+                lines.append(f"```{lang}")
+                lines.append(code_txt)
+                lines.append("```")
+            if test_txt:
+                lines.append("")
+                lines.append(f"#### Mã kiểm thử đơn vị (`{s_id}_test.{ext}`)")
+                lines.append(f"```{lang}")
+                lines.append(test_txt)
+                lines.append("```")
             lines.append("")
 
         lines.append("---")
