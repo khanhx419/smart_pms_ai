@@ -37,17 +37,17 @@ class TestRunner:
         mode_upper = mode.upper()
         if attempt == 1:
             if mode_upper == "OFF" and story_id == "ST-1":
-                errors.append("Functional defect: Login capability missing in initial code")
+                errors.append("Functional defect: Core validation capability missing in initial code")
                 coverage = 60.0
             elif mode_upper == "BASIC" and story_id == "ST-1":
-                errors.append("Functional defect: Input validation logic missing for email format")
+                errors.append("Functional defect: Input validation logic missing for edge cases")
                 coverage = 65.0
             elif mode_upper == "STRICT":
                 if story_id == "ST-1":
-                    errors.append("Functional defect: Input validation logic missing for email format")
+                    errors.append("Functional defect: Input validation logic missing for edge cases")
                     coverage = 65.0
                 elif story_id == "ST-2":
-                    errors.append("QA defect: Missing error boundary handling in login form")
+                    errors.append("QA defect: Missing error boundary and fallback handling in component")
                     coverage = 70.0
 
         passed = len(errors) == 0
